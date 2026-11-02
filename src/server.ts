@@ -29,7 +29,7 @@ function newConnection(socket: net.Socket) {
         if (nickname) {
             clients.delete(socket);
             nicknames.delete(nickname);
-            broadcast(`[Server]: ${nickname} left.\n`);
+            broadcast(`[Server]: ${nickname} left.\n`, socket);
         }
 
         console.log("Client disconnected");
@@ -52,14 +52,15 @@ function newConnection(socket: net.Socket) {
 
             const message = rawMessage.trim();
 
-            if (message === "exit") {
-                socket.end();
-                return;
+            if (message.startsWith('/')) {
+                let command = message.slice(1);
+                runCommand(socket, command);
+                continue;
             }
 
             if (clients.has(socket)) {
                 const nickname = clients.get(socket)!;
-                broadcast(`[${nickname}]: ${message}\n`);
+                broadcast(`[${nickname}]: ${message}\n`, socket);
                 continue;
             }
 
@@ -79,13 +80,50 @@ function newConnection(socket: net.Socket) {
             nicknames.add(normalized);
 
             socket.write(`Welcome, ${message}\n`);
-            broadcast(`[Server]: ${message} joined.\n`);
+            broadcast(`[Server]: ${message} joined.\n`, socket);
         }
     });
 }
 
-function broadcast(message: string) {
+function broadcast(message: string, exceptSocket?: net.Socket) {
     for (const client of clients.keys()) {
-        client.write(message);
+        if (client !== exceptSocket) {
+            client.write(message);
+        }
+    }
+}
+
+function runCommand(socket: net.Socket, command: string) {
+    const listConnectedUsers = () => {
+        let message = "Connected users:\n";
+        for (const [_, nickname] of clients) {
+            message += ` - ${nickname}\n`;
+        }
+        socket.write(message);
+    }
+
+    const listHelp = () => {
+        const message = `Available commands:
+
+/who - List connected users
+/help - Show this help message
+/quit - Disconnect from the server
+`;
+        socket.write(message);
+    }
+
+    switch(command) {
+        case 'who':
+            listConnectedUsers();
+            break;
+        case 'help':
+            listHelp();
+            break;
+        case 'quit':
+            socket.destroy();
+            break;
+        default:
+            socket.write(`Unknown command: ${command}\n`);
+            break;
     }
 }
