@@ -2,16 +2,15 @@
   "name": "relay",
   "version": "1.0.0",
   "private": true,
-  "description": "",
+  "description": "A multi-client terminal chat server built with Node.js, TypeScript, and TCP socket programming",
   "main": "index.js",
   "scripts": {
     "server": "tsx src/server.ts",
-    "client": "tsx src/client.ts",
     "build": "tsc",
     "start": "pnpm build && pnpm server"
   },
   "keywords": [],
-  "author": "",
+  "author": "Akash Raj",
   "license": "ISC",
   "devEngines": {
     "packageManager": {
