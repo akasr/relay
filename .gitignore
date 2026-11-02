@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next lines are optional, depending on your hoisting/virtual store configuration
+.pnpm/
+
+# Local env files
+.env*.local
+
+# Log files
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Builds
+dist/
