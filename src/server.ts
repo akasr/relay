@@ -12,20 +12,42 @@ server.listen({
     port: 3000,
 });
 
+const connections: Set<net.Socket> = new Set();
+
 function newConnection(socket: net.Socket) {
-    console.log('Client connected');
+    connections.add(socket);
+    console.log('No. of connected clients:', connections.size);
 
     socket.on('end', () => {
         console.log('EOF');
     });
 
-    socket.on('data', (data: Buffer) => {
-        console.log('Received:', data.toString());
-        socket.write('Message Received!\n');
+    socket.on('close', () => {
+        connections.delete(socket);
+        console.log('Client disconnected');
+        console.log('Connected clients:', connections.size);
+    });
 
-        if (data.includes('exit')) {
-            console.log('closing connection');
-            socket.end();
+    let buffer = "";
+    socket.on('data', (data: Buffer) => {
+        buffer += data.toString();
+        const socketId = `${socket.remoteAddress}:${socket.remotePort}`;
+
+        let newlineIndex: number;
+        while((newlineIndex = buffer.indexOf('\n')) !== -1) {
+            const message = buffer.slice(0, newlineIndex);
+            buffer = buffer.slice(newlineIndex + 1);
+
+            if (message.trim() === 'exit') {
+                socket.end();
+                return;
+            }
+
+            for (const connection of connections) {
+                if (connection != socket) {
+                    connection.write(`${socketId}: ${message}\n`);
+                }
+            }
         }
     });
 }
