@@ -29,6 +29,7 @@ function newConnection(socket: net.Socket) {
         if (nickname) {
             clients.delete(socket);
             nicknames.delete(nickname);
+            broadcast(`[Server]: ${nickname} left.\n`);
         }
 
         console.log("Client disconnected");
